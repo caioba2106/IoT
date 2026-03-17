@@ -1,0 +1,65 @@
+int eq1 = 3;
+int eq2 = 4;
+int eq3 = 5;
+int eq4 = 6;
+
+int botaoDireita = 7;
+int botaoEsquerda = 2;
+
+int controle = 0;
+
+
+void setup() {
+
+	Serial.begin(9600);
+	pinMode(eq1, OUTPUT);
+	pinMode(eq2, OUTPUT);
+	pinMode(eq3, OUTPUT);
+	pinMode(eq4, OUTPUT);
+
+	pinMode(botaoDireita, INPUT);
+	pinMode(botaoEsquerda, INPUT);
+}
+
+
+void loop() {
+	
+	//Incrementar a variável "controle"
+	if(digitalRead(botaoDireita) == HIGH){
+		if(controle < 4){
+			controle = controle + 1;
+		}
+		delay(200);
+	}
+
+	//Decrementar a variável "controle"
+	if(digitalRead(botaoEsquerda) == HIGH){
+		if(controle > 0){
+			controle = controle - 1;
+		}
+		delay(200);
+	}
+
+	//Apagar todos os LEDs
+	digitalWrite(eq1, LOW);
+	digitalWrite(eq2, LOW);
+	digitalWrite(eq3, LOW);
+	digitalWrite(eq4, LOW);
+
+	//Acender LED correspondente
+	if(controle == 1){
+		digitalWrite(eq1, HIGH);
+	}
+
+	if(controle == 2){
+		digitalWrite(eq2, HIGH);
+	}
+
+	if(controle == 3){
+		digitalWrite(eq3, HIGH);
+	}
+
+	if(controle == 4){
+		digitalWrite(eq4, HIGH);
+	}
+}
