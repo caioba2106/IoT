@@ -1,0 +1,162 @@
+((Exercício 1 – Monitoramento de Corrente))
+int sensorPin = A0;
+int valorADC = 0;
+float corrente = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  valorADC = analogRead(sensorPin);
+
+  // Conversão para corrente
+  corrente = (valorADC / 1023.0) * 20.0;
+
+  Serial.print("Corrente: ");
+  Serial.print(corrente);
+  Serial.println(" A");
+
+  delay(1000);
+}
+
+-----
+
+((Exercício 2 – Detecção de Sobrecarga))
+int sensorPin = A0;
+int valorADC = 0;
+float corrente = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  valorADC = analogRead(sensorPin);
+
+  // Converter para corrente (0–20A)
+  corrente = (valorADC / 1023.0) * 20.0;
+
+  // Exibir corrente
+  Serial.print("Corrente: ");
+  Serial.print(corrente);
+  Serial.println(" A");
+
+  // Verificação de sobrecarga
+  if (corrente <= 12.0) {
+    Serial.println("Status: NORMAL");
+  } else {
+    Serial.println("Status: ALERTA");
+  }
+
+  Serial.println("------------------");
+  delay(1000);
+}
+
+-----
+
+((Exercício 3 – Monitoramento de Pressão))
+int sensorPin = A0;
+int valorADC = 0;
+float pressao = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  valorADC = analogRead(sensorPin);
+
+  // Converter para pressão (0–10 bar)
+  pressao = (valorADC / 1023.0) * 10.0;
+
+  Serial.print("Pressao: ");
+  Serial.print(pressao);
+  Serial.println(" bar");
+
+  delay(1000);
+}
+
+-----
+
+((Exercício 4 – Controle de Vazão))
+int sensorPin = A0;
+int valorADC = 0;
+float vazao = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  valorADC = analogRead(sensorPin);
+
+  // Converter para vazão (0–100 L/min)
+  vazao = (valorADC / 1023.0) * 100.0;
+
+  Serial.print("Vazao: ");
+  Serial.print(vazao);
+  Serial.println(" L/min");
+
+  // Classificação
+  if (vazao < 30) {
+    Serial.println("Status: BAIXA");
+  } 
+  else if (vazao <= 70) {
+    Serial.println("Status: IDEAL");
+  } 
+  else {
+    Serial.println("Status: ALTA");
+  }
+
+  Serial.println("------------------");
+  delay(1000);
+}
+
+-----
+
+((Exercício 5 – Sistema Integrado))
+int sensorTemp = A0;
+int sensorCorrente = A1;
+
+int adcTemp = 0;
+int adcCorrente = 0;
+
+float temperatura = 0;
+float corrente = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Leituras
+  adcTemp = analogRead(sensorTemp);
+  adcCorrente = analogRead(sensorCorrente);
+
+  // Conversões
+  temperatura = (adcTemp / 1023.0) * 100.0;
+  corrente = (adcCorrente / 1023.0) * 20.0;
+
+  // Verificação
+  String status;
+
+  if(temperatura > 60.0 || corrente > 12.0){
+    status = "ALERTA";
+  } 
+  
+  else{
+    status = "NORMAL";
+  }
+
+  // Saída
+  Serial.print("Temp: ");
+  Serial.print(temperatura);
+  Serial.print(" C | Corrente: ");
+  Serial.print(corrente);
+  Serial.print(" A | Status: ");
+  Serial.println(status);
+
+  Serial.println("---------------------------------------------------");
+  delay(1000);
+}
