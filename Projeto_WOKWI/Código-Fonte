@@ -1,0 +1,170 @@
+---("sketch.ino")
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid     = "Wokwi-GUEST";
+const char* password = "";
+
+WebServer server(80);
+
+const int mq2Pin    = 34;
+const int buzzerPin = 27;
+const int redLED    = 26;
+const int greenLED  = 25;
+
+const int detectionThresholdGas   = 600;
+const int detectionThresholdSmoke = 30;
+const int buzzerChannel           = 0;
+
+String currentStatus      = "Safe";
+int    currentSensorValue = 0;
+
+void handleRoot(){
+  String json = "{";
+  json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
+  json += "\"sensor\":" + String(currentSensorValue) + ",";
+  json += "\"status\":\"" + currentStatus + "\"";
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+void setup(){
+  Serial.begin(115200);
+
+  WiFi.begin(ssid, password);
+  int tentativas = 0;
+  while(WiFi.status() != WL_CONNECTED && tentativas < 20){
+    delay(500);
+    Serial.print(".");
+    tentativas++;
+  }
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("\nWiFi Conectado!");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nFalha no WiFi! Continuando sem rede...");
+  }
+
+  server.on("/", handleRoot);
+  server.begin();
+
+  pinMode(redLED,   OUTPUT);
+  pinMode(greenLED, OUTPUT);
+
+  ledcAttachChannel(buzzerPin, 1500, 8, buzzerChannel);
+}
+
+void loop(){
+  server.handleClient();
+
+  currentSensorValue = analogRead(mq2Pin);
+  Serial.print("Sensor Value: ");
+  Serial.println(currentSensorValue);
+
+  if(currentSensorValue > detectionThresholdSmoke){
+    currentStatus = (currentSensorValue > detectionThresholdGas) ? "Gas" : "Smoke";
+    Serial.println(currentSensorValue > detectionThresholdGas ? "⚠️ Gas Detected!" : "⚠️ Smoke Detected!");
+    digitalWrite(redLED,   HIGH);
+    digitalWrite(greenLED, LOW);
+    ledcWriteTone(buzzerChannel, 1500);
+  } else {
+    currentStatus = "Safe";
+    Serial.println("Status: Safe");
+    digitalWrite(redLED,   LOW);
+    digitalWrite(greenLED, HIGH);
+    ledcWriteTone(buzzerChannel, 0);
+    ledcWrite(buzzerChannel, 0);
+  }
+
+  delay(200);
+}
+
+
+---("diagram.json")
+{
+  "version": 1,
+  "author": "João Emanoel",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-half", "id": "bb1", "top": -118.2, "left": -131.6, "attrs": {} },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 94.34,
+      "left": -25.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gas-sensor",
+      "id": "gas1",
+      "top": -176.8,
+      "left": 175.7,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": -151.2,
+      "left": 11.4,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -109.2,
+      "left": -121,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": -109.2,
+      "left": -73,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -24,
+      "left": -125.35,
+      "rotate": 90,
+      "attrs": { "value": "1000" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -24,
+      "left": -77.35,
+      "rotate": 90,
+      "attrs": { "value": "1000" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:5V", "bb1:bp.1", "red", [ "v0.15", "h-48", "v-86.4" ] ],
+    [ "esp:CMD", "bb1:bn.1", "cyan", [ "v-28.65", "h-38.4" ] ],
+    [ "bb1:bn.5", "bb1:6t.e", "black", [ "v0" ] ],
+    [ "bb1:bn.2", "bb1:1t.e", "black", [ "v46.7", "h-46.4", "v-153.6", "h9.6" ] ],
+    [ "esp:25", "bb1:7b.j", "purple", [ "v-57.45", "h-76.8" ] ],
+    [ "gas1:VCC", "bb1:bp.20", "red", [ "v134.4", "h0.9" ] ],
+    [ "gas1:GND", "bb1:bn.21", "cyan", [ "v0" ] ],
+    [ "gas1:AOUT", "esp:34", "yellow", [ "v211.2", "h-86.4", "v-9.6" ] ],
+    [ "led1:A", "bb1:2t.a", "", [ "$bb" ] ],
+    [ "led1:C", "bb1:1t.a", "", [ "$bb" ] ],
+    [ "led2:A", "bb1:7t.a", "", [ "$bb" ] ],
+    [ "led2:C", "bb1:6t.a", "", [ "$bb" ] ],
+    [ "r1:1", "bb1:2t.c", "", [ "$bb" ] ],
+    [ "r1:2", "bb1:2b.g", "", [ "$bb" ] ],
+    [ "r2:1", "bb1:7t.c", "", [ "$bb" ] ],
+    [ "r2:2", "bb1:7b.g", "", [ "$bb" ] ],
+    [ "bz1:1", "bb1:16t.a", "", [ "$bb" ] ],
+    [ "bz1:2", "bb1:17t.a", "", [ "$bb" ] ],
+    [ "bb1:16t.b", "bb1:bn.13", "cyan", [ "v134.4" ] ],
+    [ "bb1:17t.b", "esp:27", "blue", [ "v182.4", "h-38.4" ] ],
+    [ "esp:26", "bb1:2b.j", "purple", [ "v-47.85", "h-105.6", "v-9.6" ] ]
+  ],
+  "dependencies": {}
+}
